@@ -3,6 +3,8 @@
   "displayName": "Laravel Inertia Navigator",
   "description": "Quickly navigate from Laravel routes to Inertia pages.",
   "version": "0.0.1",
+  "publisher": "linhl4m",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.125.0"
   },
