@@ -1,4 +1,6 @@
 /**
+ * Maps a controller class name to its file path within the Laravel
+ * project's default controller directory.
  * @param {string} controller
  * @returns {string}
  */
@@ -7,15 +9,17 @@ function resolveControllerPath(controller) {
 }
 
 /**
+ * Finds the line number where the given method is declared in the
+ * controller's source, by matching its `function` signature.
  * @param {string} controllerText
- * @param {string} action
+ * @param {string} method
  * @returns {number | null}
  */
-function findControllerActionLine(controllerText, action) {
+function findControllerMethodLine(controllerText, method) {
     const lines = controllerText.split('\n');
 
     const pattern = new RegExp(
-        `function\\s+${action}\\s*\\(`
+        `function\\s+${method}\\s*\\(`
     );
 
     const index = lines.findIndex((line) =>
@@ -26,14 +30,17 @@ function findControllerActionLine(controllerText, action) {
 }
 
 /**
+ * Scans forward from a method's declaration line for its
+ * `Inertia::render('Page')` call, stopping once the next method
+ * declaration is reached so it doesn't match a page from another method.
  * @param {string} controllerText
- * @param {number} actionLine
+ * @param {number} methodLine
  * @returns {string | null}
  */
-function findInertiaPage(controllerText, actionLine) {
+function findInertiaPage(controllerText, methodLine) {
     const lines = controllerText.split('\n');
 
-    for (let i = actionLine; i < lines.length; i++) {
+    for (let i = methodLine; i < lines.length; i++) {
         const line = lines[i];
 
         const match = line.match(
@@ -45,7 +52,7 @@ function findInertiaPage(controllerText, actionLine) {
         }
 
         const isNextMethod =
-            i > actionLine &&
+            i > methodLine &&
             /^\s*public function\s+/.test(line);
 
         if (isNextMethod) {
@@ -58,6 +65,6 @@ function findInertiaPage(controllerText, actionLine) {
 
 module.exports = {
     resolveControllerPath,
-    findControllerActionLine,
+    findControllerMethodLine,
     findInertiaPage
 };

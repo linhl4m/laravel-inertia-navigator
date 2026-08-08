@@ -1,4 +1,6 @@
 /**
+ * Maps an Inertia page name (as passed to `Inertia::render`) to its
+ * Vue file path within the Laravel project.
  * @param {string} inertiaPage
  * @returns {string}
  */

@@ -1,15 +1,20 @@
 const vscode = require('vscode');
 const {
     resolveControllerPath,
-    findControllerActionLine,
+    findControllerMethodLine,
     findInertiaPage
 } = require('./controllerResolver');
 const {
     resolveInertiaPagePath
 } = require('./pageResolver');
-const { parseRoute } = require('./routeParser');
 
-async function goToPage() {
+/**
+ * Navigates from a route action to the Inertia page it renders: opens
+ * the controller, locates the method, resolves the rendered page, and
+ * opens that file in the editor.
+ * @param {{ controller: string, method: string }} route
+ */
+async function goToPage(route) {
     const editor = vscode.window.activeTextEditor;
 
     if (!editor) {
@@ -19,25 +24,14 @@ async function goToPage() {
         return;
     }
 
-    const currentLine = editor.document.lineAt(
-        editor.selection.active.line
-    ).text;
-
-    const route = parseRoute(currentLine);
-
-    if (!route) {
-        vscode.window.showErrorMessage(
-            'No Laravel controller route found.'
-        );
-        return;
-    }
-
     const workspaceFolder =
-        vscode.workspace.workspaceFolders?.[0];
+        vscode.workspace.getWorkspaceFolder(
+            editor.document.uri
+        );
 
     if (!workspaceFolder) {
         vscode.window.showErrorMessage(
-            'No workspace folder is open.'
+            'Current file is not inside a workspace.'
         );
         return;
     }
@@ -56,26 +50,26 @@ async function goToPage() {
                 controllerUri
             );
 
-        const actionLine = findControllerActionLine(
+        const methodLine = findControllerMethodLine(
             controllerDocument.getText(),
-            route.action
+            route.method
         );
 
-        if (actionLine === null) {
+        if (methodLine === null) {
             vscode.window.showErrorMessage(
-                `Action "${route.action}" not found.`
+                `Method "${route.method}" not found.`
             );
             return;
         }
 
         const inertiaPage = findInertiaPage(
             controllerDocument.getText(),
-            actionLine
+            methodLine
         );
 
         if (!inertiaPage) {
             vscode.window.showErrorMessage(
-                'No Inertia page found in controller action.'
+                'No Inertia page found in controller method.'
             );
             return;
         }
@@ -91,9 +85,7 @@ async function goToPage() {
         const pageDocument =
             await vscode.workspace.openTextDocument(pageUri);
 
-        await vscode.window.showTextDocument(
-            pageDocument
-        );
+        await vscode.window.showTextDocument(pageDocument);
 
     } catch (error) {
         console.error(error);
